@@ -3,38 +3,66 @@
 #include<ctime>
 #include<cmath>
 #include<cstdlib>
+#include<cstring>
+#include<utility>
 
-#define TIME_LIMIT 2000
-#define ITER_LIMIT 1000000
-#define COEFF 0.707
+const double TIME_LIMIT = 1.8 * CLOCKS_PER_SEC;
+const int ITER_LIMIT = 1000000;
+const int COEFF = 0.707;
 // upper confidence tree
 class UCT {
 private:
     UCTNode *root;
     int h, w; // height and width of the board
     int noX, noY; // banned spot
-    clock_t time; // starting time
+    clock_t start_time; // starting time
 
 public:
-    UCT(int **_board, int _h, int _w, const int *_top, int _noX, int _noY) : h(_h), w(_w), noX(_noX), noY(_noY) {
-        root = new UCTNode(_board, _h, _w, _top, noX, noY);
-        time = clock();
+    UCT(int **_board, int _h, int _w, const int *_top, int _noX, int _noY, int _lastX, int _lastY) : h(_h), w(_w), noX(_noX), noY(_noY) {
+        root = new UCTNode(_board, _h, _w, _top, noX, noY, _lastX, _lastY);
+        start_time = clock();
     }
     ~UCT() {
         delete root;
     }
 
     //perform UCT search
-    UCTNode* search() {
+    std::pair<int, int> search() {
+        //next move ai can win
+        for (int i = 0; i < w; i++) {
+            if (root->top[i] > 0) {
+                int row = root->top[i] - 1;
+                root->board[row][i] = 2;
+                if (machineWin(row, i, h, w, root->board)) {
+                    root->board[row][i] = 0;
+                    return std::pair<int, int>(row, i);
+                }
+                root->board[row][i] = 0;
+            }
+        }
+        //next move user can win
+        for (int i = 0; i < w; i++) {
+            if (root->top[i] > 0) {
+                int row = root->top[i] - 1;
+                root->board[row][i] = 1;
+                if (userWin(row, i, h, w, root->board)) {
+                    root->board[row][i] = 0;
+                    return std::pair<int, int>(row, i);
+                }
+                root->board[row][i] = 0;
+            }
+        }
+
         //keep track of the memory limit by keeping track of the iterations
         int iter = 0;
-        while (clock() - time < TIME_LIMIT && iter++ < ITER_LIMIT) {
+        while ((clock() - start_time < TIME_LIMIT) && (iter++ < ITER_LIMIT)) {
             UCTNode *selected_node = treePolicy(); // selection and expansion
             double result = defaultPolicy(selected_node);// simulation
             backpropagate(selected_node, result);// backpropagation
         }
         // return the move to the best child
-        return bestMove();
+        UCTNode* best = bestMove();
+        return std::pair<int, int>(best->move_x, best->move_y);
     }
 
     UCTNode* treePolicy() {
@@ -55,9 +83,7 @@ public:
         // choose one move and create a node for it
         int chosen_rank = rand() % node->expandable_count;
         int *new_top = new int[node->w];
-        for (int i = 0; i < node->w; i++) {
-            new_top[i] = node->top[i];
-        }
+        memcpy(new_top, node->top, sizeof(int) * node->w);
 
         int y = node->expandable_nodes[chosen_rank]; // randomly chosen column
         int x = --new_top[y]; // fill the corresponding row
@@ -102,9 +128,7 @@ public:
         int **current_board = new int*[h];
         for (int i = 0; i < h; i++) {
             current_board[i] = new int[w];
-            for (int j = 0; j < w; j++) {
-                current_board[i][j] = node->board[i][j];
-            }
+            memcpy(current_board[i], node->board[i], sizeof(int) * w);
         }
 
         int *current_top = new int[w];
@@ -113,7 +137,7 @@ public:
         for (int i = 0; i < w; i++) {
             current_top[i] = node->top[i];
             if (current_top[i]) {
-                valid_columns[valid_column_count++] = current_top[i];
+                valid_columns[valid_column_count++] = i;
             }
         }
 
@@ -143,14 +167,14 @@ public:
             last_y = valid_columns[chosen_rank];
             last_x = --current_top[last_y];
 
-            //remove full column
-            if (current_top[last_y] == 0) { 
-                valid_columns[chosen_rank] = valid_columns[--valid_column_count];
-            }
-
             //if banned spot, update top
             if (last_y == noY && last_x - 1 == noX) {
                 current_top[last_y]--;
+            }
+
+            //remove full column
+            if (current_top[last_y] == 0) { 
+                valid_columns[chosen_rank] = valid_columns[--valid_column_count];
             }
 
             current_board[last_x][last_y] = ai_turn? 2 : 1;

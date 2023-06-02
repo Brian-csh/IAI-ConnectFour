@@ -47,10 +47,11 @@ extern "C" Point *getPoint(const int M, const int N, const int *top, const int *
 
 	//can use board, which is a copy of the board
 
-	UCT* uct = new UCT(board, M, N, top, noX, noY);// create UCT
-	auto result = uct->search();//perform the algorithm
-	x = result->getMoveX();
-	y = result->getMoveY();
+	UCT* uct = new UCT(board, M, N, top, noX, noY, lastX, lastY);// create UCT
+	std::pair<int, int> result = uct->search();//perform the algorithm
+	x = result.first;
+	y = result.second;
+	delete uct;
 	//select the best next move
 
 	/*
