@@ -5,10 +5,50 @@
 #include<cstdlib>
 #include<cstring>
 #include<utility>
+#include<iostream>
+
+// #define DEBUG_SIM
 
 const double TIME_LIMIT = 1.8 * CLOCKS_PER_SEC;
 const int ITER_LIMIT = 1000000;
 const int COEFF = 0.707;
+
+#ifdef DEBUG_SIM
+void printBoard(int **board, int h, int w, int noX, int noY)
+{
+    for (int i = 0; i < w; i++)
+        std::cout << "- ";
+    std::cout << std::endl;
+	for (int i = 0; i < h; i++)
+	{
+		for (int j = 0; j < w; j++)
+		{
+			if (board[i][j] == 0)
+			{
+				if (i == noX && j == noY)
+				{
+					std::cout << "X ";
+				}
+				else
+				{
+					std::cout << ". ";
+				}
+			}
+			else if (board[i][j] == 2)
+			{
+				std::cout << "A ";
+			}
+			else if (board[i][j] == 1)
+			{
+				std::cout << "B ";
+			}
+		}
+		std::cout << std::endl;
+	}
+	return;
+}
+#endif
+
 // upper confidence tree
 class UCT {
 private:
@@ -124,6 +164,9 @@ public:
     // perform simulation until a winner is decided
     // starting from node, simulate the game until a result is determined
     double defaultPolicy(UCTNode *node) {
+        #ifdef DEBUG_SIM
+            std::cout << "start simulation." << std::endl;
+        #endif
         //set up a copy of board and top for simulation
         int **current_board = new int*[h];
         for (int i = 0; i < h; i++) {
@@ -150,6 +193,9 @@ public:
  
         //keep playing until the game is over
         while (true) {
+            #ifdef DEBUG_SIM
+            printBoard(current_board, h, w, noX, noY);
+            #endif
             if (!ai_turn && machineWin(last_x, last_y, h, w, current_board)) { //cuz last x and last y is the last round
                 profit = 1;
                 break;
