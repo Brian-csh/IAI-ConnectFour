@@ -25,7 +25,7 @@ private:
 public:
     // constructor
     UCTNode(int **_board, int _h, int _w, const int *_top, int _noX = -1, int _noY = -1, int _move_x = -1, int _move_y = -1, bool _ai_turn = true, UCTNode *_parent = nullptr)
-        : h(_h), w(_w), noX(_noX), noY(_noY), move_x(_move_x), move_y(_move_y), ai_turn(_ai_turn),
+        : h(_h), w(_w), noX(_noX), noY(_noY), move_x(_move_x), move_y(_move_y), ai_turn(_ai_turn), visit_count(0), profit(0),
           parent(_parent), children(new UCTNode*[_w]), expandable_nodes(new int[_w]), expandable_count(0), terminal(-1) {
         // set up the board
         board = new int*[h];

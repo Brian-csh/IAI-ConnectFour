@@ -8,12 +8,14 @@
 #include<iostream>
 
 // #define DEBUG_SIM
+// #define DEBUG_BP
+// #define DEBUG_TREE
 
 const double TIME_LIMIT = 1.8 * CLOCKS_PER_SEC;
 const int ITER_LIMIT = 1000000;
-const int COEFF = 0.707;
+const double COEFF = 0.707;
 
-#ifdef DEBUG_SIM
+#ifdef DEBUG_TREE
 void printBoard(int **board, int h, int w, int noX, int noY)
 {
     for (int i = 0; i < w; i++)
@@ -156,6 +158,11 @@ public:
         node->children[y]->board[x][y] = node->ai_turn ? 2 : 1; // apply the move
         node->removeExpandableNode(chosen_rank);
         delete[] new_top;
+
+        #ifdef DEBUG_SIM
+        std::cout << "Expanding a new node" << std::endl;
+        printBoard(node->children[y]->board, h, w, noX, noY);
+        #endif
         
         return node->children[y];   
     }
@@ -168,8 +175,8 @@ public:
         for (int i = 0; i < w; i++) {
             if (node->children[i]) {
                 // we use negative instead of complement
-                double temp_UCB = (node->ai_turn ? 1 : -1) * node->children[i]->profit / (double)(node->children[i]->visit_count)
-                    + COEFF * sqrt(2 * log((double)(node->visit_count)) / (double)(node->children[i]->visit_count));
+                double temp_UCB = (node->ai_turn ? 1 : -1) * (double)(node->children[i]->profit) / (node->children[i]->visit_count)
+                    + COEFF * sqrt(2 * log((double)(node->visit_count)) / (node->children[i]->visit_count));
                 if (temp_UCB > best_UCB) {
                     best = node->children[i];
                     best_UCB = temp_UCB;
@@ -210,14 +217,30 @@ public:
             #endif
             if (!ai_turn && machineWin(last_x, last_y, h, w, current_board)) { //cuz last x and last y is the last round
                 profit = 1;
+                #ifdef DEBUG_SIM
+                std::cout << "AI won" << std::endl;
+                std::cout << "profit: " << profit << std::endl;
+                #endif
                 break;
             } else if (ai_turn && userWin(last_x, last_y, h, w, current_board)) {
                 profit = -1;
+                #ifdef DEBUG_SIM
+                std::cout << "USER won" << std::endl;
+                std::cout << "profit: " << profit << std::endl;
+                #endif
                 break;
             } else if (isTie(w, current_top)) {
                 profit = 0;
                 break;
             }
+            #ifdef DEBUG_SIM
+            if (!ai_turn) {
+                std::cout << "AI move" << std::endl;
+            } else {
+                std::cout << "USER move" << std::endl;
+            }
+            std::cout << "profit: " << profit << std::endl;
+            #endif
 
             // simulate one turn
             ai_turn = !ai_turn;
@@ -270,6 +293,9 @@ public:
         while (current_node) {
             current_node->visit_count++;
             current_node->profit += profit;
+            #ifdef DEBUG_BP
+            std::cout << "bp: visit_count=" << current_node->visit_count << ", profit = " << current_node->profit << std::endl;
+            #endif
             current_node = current_node->parent;
         }
     }
@@ -283,11 +309,18 @@ public:
         for (int i = 0; i < w; i++) {
             if (root->children[i]) {
                 // we use negative instead of complement
-                double temp_UCB = (root->ai_turn ? 1 : -1) * root->children[i]->profit / (double)(root->children[i]->visit_count);
+                double temp_UCB = (root->ai_turn ? 1 : -1) * (double)(root->children[i]->profit) / (root->children[i]->visit_count);
                 if (temp_UCB > best_UCB) {
                     best = root->children[i];
                     best_UCB = temp_UCB;
                 }
+                #ifdef DEBUG_TREE
+                std::cout << "data:" << std::endl;
+                std::cout << "profit: " << root->children[i]->profit << ", visit_count: " << root->children[i]->visit_count << std::endl;
+                std::cout << "UCB: " << temp_UCB << std::endl;
+                printBoard(root->children[i]->board, h, w, noX, noY);
+                std::cout << std::endl;
+                #endif
             }
         }
 
