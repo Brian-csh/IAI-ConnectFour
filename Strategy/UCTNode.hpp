@@ -66,7 +66,7 @@ public:
             return terminal;
         }
         // determine whether game is over
-        if (move_x == -1 || move_y == -1) { //temporary fix
+        if (move_x == -1 && move_y == -1) { // game just started
             terminal = 0;
         } else if ((!ai_turn && userWin(move_x, move_y, h, w, board)) || (ai_turn && machineWin(move_x, move_y, h, w, board)) || isTie(w, top)){
             terminal = 1;

@@ -55,7 +55,7 @@ public:
 
         //keep track of the memory limit by keeping track of the iterations
         int iter = 0;
-        while ((clock() - start_time < TIME_LIMIT) && (iter++ < ITER_LIMIT)) {
+        while ((clock() - start_time < TIME_LIMIT) && (++iter < ITER_LIMIT)) {
             UCTNode *selected_node = treePolicy(); // selection and expansion
             double result = defaultPolicy(selected_node);// simulation
             backpropagate(selected_node, result);// backpropagation
@@ -82,8 +82,8 @@ public:
     UCTNode* expand(UCTNode *node) {
         // choose one move and create a node for it
         int chosen_rank = rand() % node->expandable_count;
-        int *new_top = new int[node->w];
-        memcpy(new_top, node->top, sizeof(int) * node->w);
+        int *new_top = new int[w];
+        memcpy(new_top, node->top, sizeof(int) * w);
 
         int y = node->expandable_nodes[chosen_rank]; // randomly chosen column
         int x = --new_top[y]; // fill the corresponding row
@@ -150,10 +150,10 @@ public:
  
         //keep playing until the game is over
         while (true) {
-            if (ai_turn && machineWin(last_x, last_y, h, w, current_board)) {
+            if (!ai_turn && machineWin(last_x, last_y, h, w, current_board)) { //cuz last x and last y is the last round
                 profit = 1;
                 break;
-            } else if (!ai_turn && userWin(last_x, last_y, h, w, current_board)) {
+            } else if (ai_turn && userWin(last_x, last_y, h, w, current_board)) {
                 profit = -1;
                 break;
             } else if (isTie(w, current_top)) {
@@ -167,6 +167,8 @@ public:
             last_y = valid_columns[chosen_rank];
             last_x = --current_top[last_y];
 
+            current_board[last_x][last_y] = ai_turn? 2 : 1;
+
             //if banned spot, update top
             if (last_y == noY && last_x - 1 == noX) {
                 current_top[last_y]--;
@@ -177,7 +179,7 @@ public:
                 valid_columns[chosen_rank] = valid_columns[--valid_column_count];
             }
 
-            current_board[last_x][last_y] = ai_turn? 2 : 1;
+            
         }
 
         delete[] current_top;
