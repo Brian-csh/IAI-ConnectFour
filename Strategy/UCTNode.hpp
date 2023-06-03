@@ -11,9 +11,9 @@ private:
     int **board; // 0: empty, 1: user, 2: ai (strategy)
     int h, w; // dimensions of the board
     int *top; // top spot of each column
+    int noX, noY; // banned coordinates
     int move_x; // x-coordinate of the move
     int move_y; // y-coordinate of the move
-    int noX, noY; // banned coordinates
     bool ai_turn; // whether it is the turn of the ai
     int visit_count; // number of times visited
     double profit;
@@ -68,7 +68,7 @@ public:
         // determine whether game is over
         if (move_x == -1 && move_y == -1) { // game just started
             terminal = 0;
-        } else if ((!ai_turn && userWin(move_x, move_y, h, w, board)) || (ai_turn && machineWin(move_x, move_y, h, w, board)) || isTie(w, top)){
+        } else if ((ai_turn && userWin(move_x, move_y, h, w, board)) || (!ai_turn && machineWin(move_x, move_y, h, w, board)) || isTie(w, top)){
             terminal = 1;
         } else {
             terminal = 0;
@@ -77,11 +77,5 @@ public:
     }
     void removeExpandableNode(int rank) {
         expandable_nodes[rank] = expandable_nodes[--expandable_count];
-    }
-    int getMoveX() {
-        return move_x;
-    }
-    int getMoveY() {
-        return move_y;
     }
 };
