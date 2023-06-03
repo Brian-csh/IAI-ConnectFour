@@ -7,9 +7,9 @@
 #include<utility>
 #include<iostream>
 
-const double TIME_LIMIT = 1.6 * CLOCKS_PER_SEC;
+const double TIME_LIMIT = 1.65 * CLOCKS_PER_SEC;
 const int ITER_LIMIT = 1000000;
-const double COEFF = 0.85;
+const double COEFF = 0.8;
 
 // upper confidence tree
 class UCT {
