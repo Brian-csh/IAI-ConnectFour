@@ -2,7 +2,7 @@
 #include <unistd.h>
 #include "Point.h"
 #include "Strategy.h"
-#include "UCT.hpp"
+#include "UCT.h"
 #include <utility>
 
 using namespace std;
