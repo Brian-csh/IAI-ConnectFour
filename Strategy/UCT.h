@@ -9,7 +9,7 @@
 
 const double TIME_LIMIT = 1.6 * CLOCKS_PER_SEC;
 const int ITER_LIMIT = 1000000;
-const double COEFF = 0.707;
+const double COEFF = 0.85;
 
 // upper confidence tree
 class UCT {
@@ -18,8 +18,8 @@ private:
     int h, w; // height and width of the board
     int noX, noY; // banned spot
     clock_t start_time; // starting time
-    int* position_weight; // weights to increase the probability of choosing the middle nodes
-    int total_weight; // sum of all weights (for choosing random index later)
+    int* position_pd; // probability distribution of positions
+    int total_pd; // sum of position_pd
 
 public:
     UCT(int **_board, int _h, int _w, const int *_top, int _noX, int _noY, int _lastX, int _lastY) : h(_h), w(_w), noX(_noX), noY(_noY) {
@@ -27,24 +27,25 @@ public:
         start_time = clock();
 
         // set the distribution of weights
-        position_weight = new int[w];
+        position_pd = new int[w];
         int mid = (w - 1) / 2;
 
         int i = 0;
         while (i <= mid) {
-            position_weight[i] = i + 1;
+            position_pd[i] = i + 1;
             i++;
         }
-        total_weight = i * (i + 1);
+        total_pd = i * (i + 1);
         if (w % 2) {
-            total_weight -= i;
+            total_pd -= i;
         }
         while (i < w) {
-            position_weight[i] = position_weight[w-i-1];
+            position_pd[i] = position_pd[w-i-1];
             i++;
         }
     }
     ~UCT() {
+        delete[] position_pd;
         delete root;
     }
 
@@ -182,10 +183,10 @@ public:
             // choose a rank, middle spots have higher probability
             bool doneSelecting = false;
             while (!doneSelecting) {
-                int lower_bound = rand() % total_weight;
+                int lower_bound = rand() % total_pd;
                 int tmp = 0;
                 for (int i = 0; i < w; ++i) {
-                    tmp += position_weight[i];
+                    tmp += position_pd[i];
                     if (lower_bound < tmp) {
                         last_y = i;
                         break;
@@ -222,7 +223,6 @@ public:
     }
 
     //determine the best move from root to next
-    //i.e. select the move_x and move_y of the best child
     UCTNode* bestMove() {
         double best_UCB = -RAND_MAX;
         UCTNode* best = nullptr;
