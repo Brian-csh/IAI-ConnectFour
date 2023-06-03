@@ -167,7 +167,7 @@ public:
             last_y = valid_columns[chosen_rank];
             last_x = --current_top[last_y];
 
-            current_board[last_x][last_y] = ai_turn? 2 : 1;
+            current_board[last_x][last_y] = ai_turn? 1 : 2;
 
             //if banned spot, update top
             if (last_y == noY && last_x - 1 == noX) {
