@@ -11,7 +11,7 @@
 // #define DEBUG_BP
 // #define DEBUG_TREE
 
-const double TIME_LIMIT = 1.8 * CLOCKS_PER_SEC;
+const double TIME_LIMIT = 1.6 * CLOCKS_PER_SEC;
 const int ITER_LIMIT = 1000000;
 const double COEFF = 0.707;
 
@@ -175,8 +175,8 @@ public:
         for (int i = 0; i < w; i++) {
             if (node->children[i]) {
                 // we use negative instead of complement
-                double temp_UCB = (node->ai_turn ? 1 : -1) * (double)(node->children[i]->profit) / (node->children[i]->visit_count)
-                    + COEFF * sqrt(2 * log((double)(node->visit_count)) / (node->children[i]->visit_count));
+                double temp_UCB = (node->ai_turn ? 1 : -1) * node->children[i]->profit / (double)(node->children[i]->visit_count)
+                    + COEFF * sqrt(2 * log((double)(node->visit_count)) / (double)(node->children[i]->visit_count));
                 if (temp_UCB > best_UCB) {
                     best = node->children[i];
                     best_UCB = temp_UCB;
@@ -309,7 +309,7 @@ public:
         for (int i = 0; i < w; i++) {
             if (root->children[i]) {
                 // we use negative instead of complement
-                double temp_UCB = (root->ai_turn ? 1 : -1) * (double)(root->children[i]->profit) / (root->children[i]->visit_count);
+                double temp_UCB = (root->ai_turn ? 1 : -1) * root->children[i]->profit / (double)(root->children[i]->visit_count);
                 if (temp_UCB > best_UCB) {
                     best = root->children[i];
                     best_UCB = temp_UCB;
