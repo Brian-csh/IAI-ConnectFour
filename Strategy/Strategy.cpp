@@ -43,14 +43,7 @@ extern "C" Point *getPoint(const int M, const int N, const int *top, const int *
 		{
 			board[i][j] = _board[i * N + j];
 		}
-	}
-
-	UCT* uct = new UCT(board, M, N, top, noX, noY, lastX, lastY);// create UCT
-	std::pair<int, int> result = uct->search();//perform the algorithm
-	x = result.first;
-	y = result.second;
-	delete uct;
-	//select the best next move
+	}	
 
 	/*
 		根据你自己的策略来返回落子点,也就是根据你的策略完成对x,y的赋值
@@ -67,6 +60,13 @@ extern "C" Point *getPoint(const int M, const int N, const int *top, const int *
 		}
 	}
     */
+   
+   	//select the best next move via UCT
+	UCT* uct = new UCT(board, M, N, top, noX, noY, lastX, lastY); // create UCT
+	std::pair<int, int> result = uct->search(); // perform the algorithm
+	x = result.first;
+	y = result.second;
+	delete uct;
 
 	/*
 		不要更改这段代码

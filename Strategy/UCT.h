@@ -7,49 +7,9 @@
 #include<utility>
 #include<iostream>
 
-// #define DEBUG_SIM
-// #define DEBUG_BP
-// #define DEBUG_TREE
-
 const double TIME_LIMIT = 1.6 * CLOCKS_PER_SEC;
 const int ITER_LIMIT = 1000000;
 const double COEFF = 0.707;
-
-#ifdef DEBUG_TREE
-void printBoard(int **board, int h, int w, int noX, int noY)
-{
-    for (int i = 0; i < w; i++)
-        std::cout << "- ";
-    std::cout << std::endl;
-	for (int i = 0; i < h; i++)
-	{
-		for (int j = 0; j < w; j++)
-		{
-			if (board[i][j] == 0)
-			{
-				if (i == noX && j == noY)
-				{
-					std::cout << "X ";
-				}
-				else
-				{
-					std::cout << ". ";
-				}
-			}
-			else if (board[i][j] == 2)
-			{
-				std::cout << "A ";
-			}
-			else if (board[i][j] == 1)
-			{
-				std::cout << "B ";
-			}
-		}
-		std::cout << std::endl;
-	}
-	return;
-}
-#endif
 
 // upper confidence tree
 class UCT {
@@ -158,11 +118,6 @@ public:
         node->children[y]->board[x][y] = node->ai_turn ? 2 : 1; // apply the move
         node->removeExpandableNode(chosen_rank);
         delete[] new_top;
-
-        #ifdef DEBUG_SIM
-        std::cout << "Expanding a new node" << std::endl;
-        printBoard(node->children[y]->board, h, w, noX, noY);
-        #endif
         
         return node->children[y];   
     }
@@ -190,9 +145,6 @@ public:
     // perform simulation until a winner is decided
     // starting from node, simulate the game until a result is determined
     double defaultPolicy(UCTNode *node) {
-        #ifdef DEBUG_SIM
-            std::cout << "start simulation." << std::endl;
-        #endif
         //set up a copy of board and top for simulation
         int **current_board = new int*[h];
         for (int i = 0; i < h; i++) {
@@ -212,35 +164,16 @@ public:
  
         //keep playing until the game is over
         while (true) {
-            #ifdef DEBUG_SIM
-            printBoard(current_board, h, w, noX, noY);
-            #endif
             if (!ai_turn && machineWin(last_x, last_y, h, w, current_board)) { //cuz last x and last y is the last round
                 profit = 1;
-                #ifdef DEBUG_SIM
-                std::cout << "AI won" << std::endl;
-                std::cout << "profit: " << profit << std::endl;
-                #endif
                 break;
             } else if (ai_turn && userWin(last_x, last_y, h, w, current_board)) {
                 profit = -1;
-                #ifdef DEBUG_SIM
-                std::cout << "USER won" << std::endl;
-                std::cout << "profit: " << profit << std::endl;
-                #endif
                 break;
             } else if (isTie(w, current_top)) {
                 profit = 0;
                 break;
             }
-            #ifdef DEBUG_SIM
-            if (!ai_turn) {
-                std::cout << "AI move" << std::endl;
-            } else {
-                std::cout << "USER move" << std::endl;
-            }
-            std::cout << "profit: " << profit << std::endl;
-            #endif
 
             // simulate one turn
             ai_turn = !ai_turn;
@@ -261,8 +194,6 @@ public:
                     doneSelecting = true;
             }
 
-            // int chosen_rank = rand() % valid_column_count;
-            // last_y = valid_columns[chosen_rank];
             last_x = --current_top[last_y];
 
             current_board[last_x][last_y] = ai_turn? 1 : 2;
@@ -270,21 +201,13 @@ public:
             //if banned spot, update top
             if (last_y == noY && last_x - 1 == noX) {
                 current_top[last_y]--;
-            }
-
-            // //remove full column
-            // if (current_top[last_y] == 0) { 
-            //     valid_columns[chosen_rank] = valid_columns[--valid_column_count];
-            // }
-
-            
+            }  
         }
 
         delete[] current_top;
         for (int i = 0; i < h; i++)
             delete[] current_board[i];
         delete[] current_board;
-        // delete[] valid_columns;
         return profit;
     }
 
@@ -293,9 +216,6 @@ public:
         while (current_node) {
             current_node->visit_count++;
             current_node->profit += profit;
-            #ifdef DEBUG_BP
-            std::cout << "bp: visit_count=" << current_node->visit_count << ", profit = " << current_node->profit << std::endl;
-            #endif
             current_node = current_node->parent;
         }
     }
@@ -314,13 +234,6 @@ public:
                     best = root->children[i];
                     best_UCB = temp_UCB;
                 }
-                #ifdef DEBUG_TREE
-                std::cout << "data:" << std::endl;
-                std::cout << "profit: " << root->children[i]->profit << ", visit_count: " << root->children[i]->visit_count << std::endl;
-                std::cout << "UCB: " << temp_UCB << std::endl;
-                printBoard(root->children[i]->board, h, w, noX, noY);
-                std::cout << std::endl;
-                #endif
             }
         }
 
