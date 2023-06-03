@@ -18,14 +18,15 @@ private:
     int h, w; // height and width of the board
     int noX, noY; // banned spot
     clock_t start_time; // starting time
-    int* position_weight;
-    int total_weight;
+    int* position_weight; // weights to increase the probability of choosing the middle nodes
+    int total_weight; // sum of all weights (for choosing random index later)
 
 public:
     UCT(int **_board, int _h, int _w, const int *_top, int _noX, int _noY, int _lastX, int _lastY) : h(_h), w(_w), noX(_noX), noY(_noY) {
         root = new UCTNode(_board, _h, _w, _top, noX, noY, _lastX, _lastY);
         start_time = clock();
 
+        // set the distribution of weights
         position_weight = new int[w];
         int mid = (w - 1) / 2;
 
@@ -129,7 +130,7 @@ public:
 
         for (int i = 0; i < w; i++) {
             if (node->children[i]) {
-                // we use negative instead of complement
+                // calculate UCB
                 double temp_UCB = (node->ai_turn ? 1 : -1) * node->children[i]->profit / (double)(node->children[i]->visit_count)
                     + COEFF * sqrt(2 * log((double)(node->visit_count)) / (double)(node->children[i]->visit_count));
                 if (temp_UCB > best_UCB) {
@@ -164,7 +165,7 @@ public:
  
         //keep playing until the game is over
         while (true) {
-            if (!ai_turn && machineWin(last_x, last_y, h, w, current_board)) { //cuz last x and last y is the last round
+            if (!ai_turn && machineWin(last_x, last_y, h, w, current_board)) { //note: last x and last y is the last round
                 profit = 1;
                 break;
             } else if (ai_turn && userWin(last_x, last_y, h, w, current_board)) {
@@ -228,7 +229,7 @@ public:
 
         for (int i = 0; i < w; i++) {
             if (root->children[i]) {
-                // we use negative instead of complement
+                // we only consider the exploitation term
                 double temp_UCB = (root->ai_turn ? 1 : -1) * root->children[i]->profit / (double)(root->children[i]->visit_count);
                 if (temp_UCB > best_UCB) {
                     best = root->children[i];
