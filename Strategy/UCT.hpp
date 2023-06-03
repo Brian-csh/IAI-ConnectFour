@@ -56,11 +56,30 @@ private:
     int h, w; // height and width of the board
     int noX, noY; // banned spot
     clock_t start_time; // starting time
+    int* position_weight;
+    int total_weight;
 
 public:
     UCT(int **_board, int _h, int _w, const int *_top, int _noX, int _noY, int _lastX, int _lastY) : h(_h), w(_w), noX(_noX), noY(_noY) {
         root = new UCTNode(_board, _h, _w, _top, noX, noY, _lastX, _lastY);
         start_time = clock();
+
+        position_weight = new int[w];
+        int mid = (w - 1) / 2;
+
+        int i = 0;
+        while (i <= mid) {
+            position_weight[i] = i + 1;
+            i++;
+        }
+        total_weight = i * (i + 1);
+        if (w % 2) {
+            total_weight -= i;
+        }
+        while (i < w) {
+            position_weight[i] = position_weight[w-i-1];
+            i++;
+        }
     }
     ~UCT() {
         delete root;
@@ -175,14 +194,7 @@ public:
         }
 
         int *current_top = new int[w];
-        int *valid_columns = new int[w];
-        int valid_column_count = 0;
-        for (int i = 0; i < w; i++) {
-            current_top[i] = node->top[i];
-            if (current_top[i]) {
-                valid_columns[valid_column_count++] = i;
-            }
-        }
+        memcpy(current_top, node->top, sizeof(int) * w);
 
         double profit = 0;
         bool ai_turn = node->ai_turn;
@@ -207,10 +219,27 @@ public:
                 break;
             }
 
-            //simulate one turn
+            // simulate one turn
             ai_turn = !ai_turn;
-            int chosen_rank = rand() % valid_column_count;
-            last_y = valid_columns[chosen_rank];
+
+            // choose a rank, middle spots have higher probability
+            bool doneSelecting = false;
+            while (!doneSelecting) {
+                int lower_bound = rand() % total_weight;
+                int tmp = 0;
+                for (int i = 0; i < w; ++i) {
+                    tmp += position_weight[i];
+                    if (lower_bound < tmp) {
+                        last_y = i;
+                        break;
+                    }
+                }
+                if (current_top[last_y] > 0) 
+                    doneSelecting = true;
+            }
+
+            // int chosen_rank = rand() % valid_column_count;
+            // last_y = valid_columns[chosen_rank];
             last_x = --current_top[last_y];
 
             current_board[last_x][last_y] = ai_turn? 1 : 2;
@@ -220,10 +249,10 @@ public:
                 current_top[last_y]--;
             }
 
-            //remove full column
-            if (current_top[last_y] == 0) { 
-                valid_columns[chosen_rank] = valid_columns[--valid_column_count];
-            }
+            // //remove full column
+            // if (current_top[last_y] == 0) { 
+            //     valid_columns[chosen_rank] = valid_columns[--valid_column_count];
+            // }
 
             
         }
@@ -232,6 +261,7 @@ public:
         for (int i = 0; i < h; i++)
             delete[] current_board[i];
         delete[] current_board;
+        // delete[] valid_columns;
         return profit;
     }
 
